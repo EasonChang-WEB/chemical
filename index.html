@@ -381,7 +381,11 @@
             const currentQ = questions[currentIndex];
 
             const handleSubmit = () => {
-                const isFormulaCorrect = inputFormula.trim().toLowerCase() === currentQ.formula.toLowerCase();
+                // 優化：將使用者輸入轉為小寫，並移除所有空白，以便寬容比對
+                const cleanInput = inputFormula.trim().toLowerCase().replace(/\s+/g, '');
+                const cleanTarget = currentQ.formula.toLowerCase();
+                
+                const isFormulaCorrect = cleanInput === cleanTarget;
                 const isValenceCorrect = inputValence === currentQ.valence;
                 const isCorrect = isFormulaCorrect && isValenceCorrect;
 
@@ -427,8 +431,8 @@
                                     type="text" 
                                     value={inputFormula}
                                     onChange={(e) => setInputFormula(e.target.value)}
-                                    placeholder="例如: H"
-                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-mono text-center focus:outline-none focus:border-teal-500 transition-colors"
+                                    placeholder="例如: CO3 (大小寫皆可)"
+                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-mono text-center focus:outline-none focus:border-teal-500 transition-colors placeholder:text-sm placeholder:text-slate-400"
                                 />
                             </div>
                             <div className="w-1/3">
