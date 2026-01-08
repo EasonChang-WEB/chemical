@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>化學學習小幫手</title>
+    <!-- 引入 Tailwind CSS (樣式庫) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React (核心框架) -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- 引入 Babel (讓瀏覽器看懂 React 代碼) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* 簡單的淡入動畫 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- 這是 React 程式掛載的點 -->
+    <div id="root"></div>
+
+    <!-- 如果瀏覽器禁止了 JavaScript，顯示此訊息 -->
+    <noscript>
+        <div style="padding: 20px; text-align: center; color: red;">
+            <h1>請開啟 JavaScript 才能使用此網頁</h1>
+        </div>
+    </noscript>
+
+    <script type="text/babel">
+        // 為了讓這份檔案可以直接在瀏覽器執行，我们将所有 React 代碼放在這裡
+        const { useState, useEffect, useMemo } = React;
+
+        // --- 圖示元件 (使用 SVG 繪製，不需外部圖片) ---
+        const ArrowLeft = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        );
+        const CheckCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-12 12-1.09-1.09"/></svg>
+        );
+        const XCircle = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        );
+        const Beaker = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>
+        );
+        const BookOpen = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        );
+        const PenTool = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        );
+        const RefreshCw = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        );
+
+        // --- 資料來源 (根據你提供的 Excel 內容) ---
+        const RAW_DATA = [
+            { name: "氫離子", formula: "H", valence: "+1" },
+            { name: "鋰離子", formula: "Li", valence: "+1" },
+            { name: "鈉離子", formula: "Na", valence: "+1" },
+            { name: "鉀離子", formula: "K", valence: "+1" },
+            { name: "銀離子", formula: "Ag", valence: "+1" },
+            { name: "氟離子", formula: "F", valence: "-1" },
+            { name: "氯離子", formula: "Cl", valence: "-1" },
+            { name: "溴離子", formula: "Br", valence: "-1" },
+            { name: "碘離子", formula: "I", valence: "-1" },
+            { name: "氫氧根", formula: "OH", valence: "-1" },
+            { name: "硝酸根", formula: "NO3", valence: "-1" },
+            { name: "醋酸根", formula: "CH3COO", valence: "-1" },
+            { name: "碳酸氫根", formula: "HCO3", valence: "-1" },
+            { name: "鎂離子", formula: "Mg", valence: "+2" },
+            { name: "鈣離子", formula: "Ca", valence: "+2" },
+            { name: "鋇離子", formula: "Ba", valence: "+2" },
+            { name: "鋅離子", formula: "Zn", valence: "+2" },
+            { name: "鉛離子", formula: "Pb", valence: "+2" },
+            { name: "銅離子", formula: "Cu", valence: "+2" },
+            { name: "亞鐵離子", formula: "Fe", valence: "+2" },
+            { name: "亞鈷離子", formula: "Co", valence: "+2" },
+            { name: "氧離子", formula: "O", valence: "-2" },
+            { name: "硫離子", formula: "S", valence: "-2" },
+            { name: "硫酸根", formula: "SO4", valence: "-2" },
+            { name: "亞硫酸根", formula: "SO3", valence: "-2" },
+            { name: "碳酸根", formula: "CO3", valence: "-2" },
+            { name: "錳離子", formula: "Mn", valence: "+4" },
+        ];
+
+        // --- 工具函數 ---
+        // 將化學式中的數字轉為下標
+        const formatFormula = (formula) => {
+            return formula.split('').map((char, index) => {
+                if (/\d/.test(char)) {
+                    return <sub key={index} className="text-xs align-baseline relative top-1">{char}</sub>;
+                }
+                return <span key={index}>{char}</span>;
+            });
+        };
+
+        // 根價排序權重
+        const getValenceWeight = (val) => {
+            if (val === "+1") return 1;
+            if (val === "+2") return 2;
+            if (val === "+4") return 3;
+            if (val === "-1") return 4;
+            if (val === "-2") return 5;
+            return 99;
+        };
+
+        // 洗牌算法
+        const shuffleArray = (array) => {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        };
+
+        // 取得核心名稱 (去掉離子、根)
+        const getCoreName = (name) => {
+            return name.replace("離子", "").replace("根", "");
+        };
+
+        // 取得後綴 (離子/根)
+        const getSuffix = (name) => {
+            if (name.includes("離子")) return "離子";
+            if (name.includes("根")) return "根";
+            return "";
+        };
+
+        // --- 主元件 ---
+        function App() {
+            const [view, setView] = useState('home');
+
+            return (
+                <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+                    {/* Header */}
+                    <header className="bg-teal-600 text-white p-4 shadow-md sticky top-0 z-10">
+                        <div className="max-w-md mx-auto flex items-center justify-between">
+                            <h1 className="text-xl font-bold flex items-center gap-2">
+                                <Beaker className="w-6 h-6" />
+                                化學小學堂
+                            </h1>
+                            {view !== 'home' && (
+                                <button 
+                                    onClick={() => setView('home')}
+                                    className="bg-teal-700 hover:bg-teal-800 p-2 rounded-full transition-colors"
+                                >
+                                    <ArrowLeft />
+                                </button>
+                            )}
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="max-w-md mx-auto p-4">
+                        {view === 'home' && <HomeMenu setView={setView} />}
+                        {view === 'list' && <FormulaList />}
+                        {view === 'quiz1' && <QuizMode1 setView={setView} />}
+                        {view === 'quiz2' && <QuizMode2 setView={setView} />}
+                    </main>
+                </div>
+            );
+        }
+
+        // --- 子元件 ---
+        function HomeMenu({ setView }) {
+            return (
+                <div className="flex flex-col gap-6 mt-8 animate-fade-in">
+                    <div className="text-center mb-4">
+                        <h2 className="text-2xl font-bold text-teal-800">歡迎回來！</h2>
+                        <p className="text-slate-500">請選擇今天的學習模式</p>
+                    </div>
+
+                    <MenuButton 
+                        icon={<BookOpen className="w-8 h-8 text-blue-500" />}
+                        title="原子式列表"
+                        desc="瀏覽所有化學式與根價"
+                        onClick={() => setView('list')}
+                        color="border-blue-200 hover:bg-blue-50"
+                    />
+
+                    <MenuButton 
+                        icon={<PenTool className="w-8 h-8 text-purple-500" />}
+                        title="測驗：中翻英"
+                        desc="看中文 -> 填寫化學式 & 根價"
+                        onClick={() => setView('quiz1')}
+                        color="border-purple-200 hover:bg-purple-50"
+                    />
+
+                    <MenuButton 
+                        icon={<RefreshCw className="w-8 h-8 text-orange-500" />}
+                        title="測驗：英翻中"
+                        desc="看化學式 -> 填寫中文名稱"
+                        onClick={() => setView('quiz2')}
+                        color="border-orange-200 hover:bg-orange-50"
+                    />
+                </div>
+            );
+        }
+
+        function MenuButton({ icon, title, desc, onClick, color }) {
+            return (
+                <button 
+                    onClick={onClick}
+                    className={`flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border-2 ${color} transition-all active:scale-95 text-left w-full`}
+                >
+                    <div className="p-3 bg-slate-50 rounded-xl">
+                        {icon}
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+                        <p className="text-sm text-slate-500">{desc}</p>
+                    </div>
+                </button>
+            );
+        }
+
+        function FormulaList() {
+            const sortedData = useMemo(() => {
+                return [...RAW_DATA].sort((a, b) => {
+                    const weightA = getValenceWeight(a.valence);
+                    const weightB = getValenceWeight(b.valence);
+                    if (weightA !== weightB) return weightA - weightB;
+                    return a.name.localeCompare(b.name);
+                });
+            }, []);
+
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in">
+                    <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <h2 className="font-bold text-lg text-slate-700">原子式總表</h2>
+                        <span className="text-xs text-slate-500">依根價排序</span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-100 text-slate-500 text-sm">
+                                <tr>
+                                    <th className="p-4 font-medium">中文名稱</th>
+                                    <th className="p-4 font-medium">化學式</th>
+                                    <th className="p-4 font-medium">根價</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {sortedData.map((item, idx) => (
+                                    <tr key={idx} className="hover:bg-slate-50">
+                                        <td className="p-4 font-medium text-slate-700">{item.name}</td>
+                                        <td className="p-4 font-mono text-teal-600 font-bold text-lg">
+                                            {formatFormula(item.formula)}
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`inline-block px-2 py-1 rounded text-sm font-bold ${
+                                                item.valence.startsWith('+') ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
+                                            }`}>
+                                                {item.valence}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        function QuizContainer({ currentQuestion, totalQuestions, currentIndex, feedback, onNext, isFinished, score, children }) {
+            if (isFinished) {
+                return (
+                    <div className="bg-white rounded-xl shadow-lg p-8 text-center animate-fade-in flex flex-col gap-6 items-center">
+                        <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto">
+                            <CheckCircle className="w-10 h-10 text-teal-600" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2">測驗完成！</h2>
+                            <p className="text-slate-500">做得好，繼續保持學習的熱情。</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-6 w-full">
+                            <p className="text-sm text-slate-500 mb-1">本次成績</p>
+                            <div className="text-4xl font-black text-teal-600">
+                                {score} <span className="text-lg text-slate-400 font-normal">/ {totalQuestions}</span>
+                            </div>
+                            <p className="text-sm text-slate-400 mt-2">正確率 {Math.round((score/totalQuestions)*100)}%</p>
+                        </div>
+                        <p className="text-xs text-slate-400">請按左上角返回選單</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex flex-col gap-4 animate-fade-in">
+                    <div className="flex justify-between items-center text-sm font-medium text-slate-500 px-2">
+                        <span>題目 {currentIndex + 1}</span>
+                        <span>共 {totalQuestions} 題</span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-teal-500 transition-all duration-300"
+                            style={{ width: `${((currentIndex) / totalQuestions) * 100}%` }}
+                        />
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-lg border-b-4 border-teal-600 overflow-hidden">
+                        {children}
+                    </div>
+
+                    {feedback && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
+                            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
+                                <div className={`p-6 flex flex-col items-center text-center ${
+                                    feedback.isCorrect ? 'bg-green-50' : 'bg-red-50'
+                                }`}>
+                                    {feedback.isCorrect ? (
+                                        <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
+                                    ) : (
+                                        <XCircle className="w-16 h-16 text-red-500 mb-4" />
+                                    )}
+                                    
+                                    <h3 className={`text-2xl font-bold mb-2 ${
+                                        feedback.isCorrect ? 'text-green-700' : 'text-red-700'
+                                    }`}>
+                                        {feedback.isCorrect ? '回答正確！' : '回答錯誤'}
+                                    </h3>
+                                    
+                                    {!feedback.isCorrect && (
+                                        <div className="bg-white p-4 rounded-lg border border-slate-200 mt-2 w-full">
+                                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">正確答案</p>
+                                            <p className="text-lg font-bold text-slate-800 mb-1">{feedback.correctName}</p>
+                                            <div className="flex justify-center gap-2 text-xl font-mono text-teal-600">
+                                                <span>{formatFormula(feedback.correctFormula)}</span>
+                                                <span className="text-slate-400">|</span>
+                                                <span>{feedback.correctValence}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div className="p-4 bg-white border-t border-slate-100">
+                                    <button 
+                                        onClick={onNext}
+                                        className={`w-full py-3 px-4 rounded-xl font-bold text-white text-lg shadow-md transition-transform active:scale-95 ${
+                                            feedback.isCorrect ? 'bg-green-500 hover:bg-green-600' : 'bg-slate-800 hover:bg-slate-900'
+                                        }`}
+                                    >
+                                        {currentIndex + 1 >= totalQuestions ? '查看結果' : '下一題'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function QuizMode1({ setView }) {
+            const [questions, setQuestions] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [inputFormula, setInputFormula] = useState("");
+            const [inputValence, setInputValence] = useState("+1");
+            const [feedback, setFeedback] = useState(null);
+            const [score, setScore] = useState(0);
+            const [isFinished, setIsFinished] = useState(false);
+
+            useEffect(() => {
+                setQuestions(shuffleArray(RAW_DATA));
+            }, []);
+
+            if (questions.length === 0) return null;
+            const currentQ = questions[currentIndex];
+
+            const handleSubmit = () => {
+                const isFormulaCorrect = inputFormula.trim().toLowerCase() === currentQ.formula.toLowerCase();
+                const isValenceCorrect = inputValence === currentQ.valence;
+                const isCorrect = isFormulaCorrect && isValenceCorrect;
+
+                if (isCorrect) setScore(s => s + 1);
+                setFeedback({
+                    isCorrect,
+                    correctName: currentQ.name,
+                    correctFormula: currentQ.formula,
+                    correctValence: currentQ.valence
+                });
+            };
+
+            const handleNext = () => {
+                setFeedback(null);
+                setInputFormula("");
+                setInputValence("+1");
+                if (currentIndex + 1 < questions.length) {
+                    setCurrentIndex(c => c + 1);
+                } else {
+                    setIsFinished(true);
+                }
+            };
+
+            return (
+                <QuizContainer 
+                    currentQuestion={currentQ}
+                    totalQuestions={questions.length}
+                    currentIndex={currentIndex}
+                    feedback={feedback}
+                    onNext={handleNext}
+                    isFinished={isFinished}
+                    score={score}
+                >
+                    <div className="p-8 flex flex-col items-center">
+                        <h3 className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-4">請填寫化學式與根價</h3>
+                        <div className="mb-8 text-center">
+                            <span className="text-4xl font-bold text-slate-800 block mb-2">{currentQ.name}</span>
+                        </div>
+                        <div className="w-full flex gap-3 mb-6">
+                            <div className="flex-1">
+                                <label className="block text-xs font-bold text-slate-400 mb-1 ml-1">化學式</label>
+                                <input 
+                                    type="text" 
+                                    value={inputFormula}
+                                    onChange={(e) => setInputFormula(e.target.value)}
+                                    placeholder="例如: H"
+                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-mono text-center focus:outline-none focus:border-teal-500 transition-colors"
+                                />
+                            </div>
+                            <div className="w-1/3">
+                                <label className="block text-xs font-bold text-slate-400 mb-1 ml-1">根價</label>
+                                <select 
+                                    value={inputValence}
+                                    onChange={(e) => setInputValence(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-2 py-3 text-lg font-bold text-center focus:outline-none focus:border-teal-500 appearance-none transition-colors"
+                                >
+                                    <option value="+1">+1</option>
+                                    <option value="+2">+2</option>
+                                    <option value="+4">+4</option>
+                                    <option value="-1">-1</option>
+                                    <option value="-2">-2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={handleSubmit}
+                            disabled={!inputFormula}
+                            className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow transition-all active:scale-95"
+                        >
+                            回答
+                        </button>
+                    </div>
+                </QuizContainer>
+            );
+        }
+
+        function QuizMode2({ setView }) {
+            const [questions, setQuestions] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [inputName, setInputName] = useState("");
+            const [feedback, setFeedback] = useState(null);
+            const [score, setScore] = useState(0);
+            const [isFinished, setIsFinished] = useState(false);
+
+            useEffect(() => {
+                setQuestions(shuffleArray(RAW_DATA));
+            }, []);
+
+            if (questions.length === 0) return null;
+            const currentQ = questions[currentIndex];
+            const coreName = getCoreName(currentQ.name);
+            const suffix = getSuffix(currentQ.name);
+
+            const handleSubmit = () => {
+                const userVal = inputName.trim();
+                const isCorrect = userVal === coreName || userVal === currentQ.name;
+
+                if (isCorrect) setScore(s => s + 1);
+                setFeedback({
+                    isCorrect,
+                    correctName: currentQ.name,
+                    correctFormula: currentQ.formula,
+                    correctValence: currentQ.valence
+                });
+            };
+
+            const handleNext = () => {
+                setFeedback(null);
+                setInputName("");
+                if (currentIndex + 1 < questions.length) {
+                    setCurrentIndex(c => c + 1);
+                } else {
+                    setIsFinished(true);
+                }
+            };
+
+            return (
+                <QuizContainer 
+                    currentQuestion={currentQ}
+                    totalQuestions={questions.length}
+                    currentIndex={currentIndex}
+                    feedback={feedback}
+                    onNext={handleNext}
+                    isFinished={isFinished}
+                    score={score}
+                >
+                    <div className="p-8 flex flex-col items-center">
+                        <h3 className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-4">請填寫中文名稱</h3>
+                        <div className="mb-8 text-center bg-slate-50 rounded-2xl p-6 w-full border-2 border-dashed border-slate-200">
+                            <div className="text-5xl font-mono font-bold text-teal-600 mb-2 flex items-center justify-center gap-2">
+                                {formatFormula(currentQ.formula)}
+                                <span className="text-2xl text-slate-400 relative top-[-10px]">{currentQ.valence}</span>
+                            </div>
+                        </div>
+                        <div className="w-full flex items-center justify-center gap-2 mb-6 text-xl">
+                            <span className="text-slate-400">(</span>
+                            <input 
+                                type="text" 
+                                value={inputName}
+                                onChange={(e) => setInputName(e.target.value)}
+                                placeholder="輸入名稱"
+                                className="w-32 bg-slate-50 border-b-2 border-slate-300 px-2 py-1 text-center font-bold text-slate-800 focus:outline-none focus:border-teal-500 transition-colors placeholder:text-sm placeholder:font-normal"
+                            />
+                            <span className="text-slate-400">)</span>
+                            <span className="font-bold text-slate-700">{suffix}</span>
+                        </div>
+                        <button 
+                            onClick={handleSubmit}
+                            disabled={!inputName}
+                            className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow transition-all active:scale-95"
+                        >
+                            回答
+                        </button>
+                    </div>
+                </QuizContainer>
+            );
+        }
+
+        // 啟動 React
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
