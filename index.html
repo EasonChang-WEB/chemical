@@ -26,21 +26,41 @@
         /* 週期表 Grid 設定 */
         .periodic-grid {
             display: grid;
-            grid-template-columns: repeat(18, minmax(0, 1fr));
-            gap: 2px;
+            grid-template-columns: repeat(18, minmax(42px, 1fr)); /* 稍微調整寬度 */
+            gap: 1px; /* 間距縮小，讓線條更緊密 */
+            background-color: #cbd5e1; /* 背景色作為格線顏色 (slate-300) */
+            padding: 1px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
         }
         .periodic-cell {
-            aspect-ratio: 1 / 1;
+            aspect-ratio: 5 / 6;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 2px;
-            font-size: 0.7rem;
+            background-color: white; /* 格子為白色 */
+            position: relative;
         }
+        /* 空格部分設定為透明背景，顯示出背景的灰色，或直接隱藏 */
+        .periodic-cell.empty {
+            background-color: transparent;
+            box-shadow: none;
+        }
+        .symbol {
+            font-weight: 800;
+            font-size: 1.1rem;
+            line-height: 1.1;
+        }
+        .name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        /* 手機版微調 */
         @media (max-width: 640px) {
-            .periodic-cell { font-size: 0.5rem; }
-            .periodic-symbol { font-size: 0.7rem; }
+            .symbol { font-size: 1rem; }
+            .name { font-size: 0.75rem; }
         }
     </style>
 </head>
@@ -61,7 +81,9 @@
             PenTool: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>,
             RefreshCw: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>,
             Grid: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
-            List: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            List: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+            Bulb: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.2 1.5-3.5 0-3.3-2.7-6-6-6S6 4.7 6 8c0 1.3.5 2.5 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>,
+            Sparkles: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5H5"/><path d="M19 19v2"/><path d="M21 21h-2"/></svg>
         };
 
         // --- 資料 1: 根價與離子 ---
@@ -82,9 +104,7 @@
             { name: "錳離子", formula: "Mn", valence: "+4" },
         ];
 
-        // --- 資料 2: 週期表元素 (只列出指定的) ---
-        // 為了繪製週期表，我們需要定義座標 (row, col)
-        // 1=H(1,1), 2=He(1,18), ...
+        // --- 資料 2: 週期表元素 ---
         const PERIODIC_ELEMENTS = [
             { s: 'H', n: '氫', r: 1, c: 1 }, { s: 'Li', n: '鋰', r: 2, c: 1 }, { s: 'Na', n: '鈉', r: 3, c: 1 }, { s: 'K', n: '鉀', r: 4, c: 1 }, { s: 'Rb', n: '銣', r: 5, c: 1 }, { s: 'Cs', n: '銫', r: 6, c: 1 }, { s: 'Fr', n: '砝', r: 7, c: 1 },
             { s: 'Be', n: '鈹', r: 2, c: 2 }, { s: 'Mg', n: '鎂', r: 3, c: 2 }, { s: 'Ca', n: '鈣', r: 4, c: 2 }, { s: 'Sr', n: '鍶', r: 5, c: 2 }, { s: 'Ba', n: '鋇', r: 6, c: 2 }, { s: 'Ra', n: '鐳', r: 7, c: 2 },
@@ -96,9 +116,50 @@
             { s: 'O', n: '氧', r: 2, c: 16 }, { s: 'S', n: '硫', r: 3, c: 16 },
             { s: 'F', n: '氟', r: 2, c: 17 }, { s: 'Cl', n: '氯', r: 3, c: 17 }, { s: 'Br', n: '溴', r: 4, c: 17 }, { s: 'I', n: '碘', r: 5, c: 17 }, { s: 'At', n: '砈', r: 6, c: 17 },
             { s: 'He', n: '氦', r: 1, c: 18 }, { s: 'Ne', n: '氖', r: 2, c: 18 }, { s: 'Ar', n: '氬', r: 3, c: 18 }, { s: 'Kr', n: '氪', r: 4, c: 18 }, { s: 'Xe', n: '氙', r: 5, c: 18 }, { s: 'Rn', n: '氡', r: 6, c: 18 },
-            // 鈾是錒系元素 (Actinides)，通常另外放，這裡我們模擬放在第 7 列的特定位置或下面
-            // 為了簡化標準表，我們將鈾 (U) 放在 row 9, col 6 (模擬下方區塊)
             { s: 'U', n: '鈾', r: 9, c: 6, isInner: true }
+        ];
+
+        // --- 週期表族群記憶法資料 ---
+        const MNEMONICS = [
+            { title: "IA族 (鹼金族)", elements: "H, Li, Na, K, Rb, Cs, Fr", text: "請李娜加入色法", sub: "氫鋰鈉鉀銣銫砝" },
+            { title: "IIA族 (鹼土族)", elements: "Be, Mg, Ca, Sr, Ba, Ra", text: "比美蓋斯貝雷", sub: "鈹鎂鈣鍶鋇鐳" },
+            { title: "IIIA族 (硼族)", elements: "B, Al...", text: "捧女 (硼鋁)", sub: "硼鋁" },
+            { title: "IVA族 (碳族)", elements: "C, Si, Ge, Sn, Pb", text: "探試者西遷 (或 嘆錢-碳鉛)", sub: "碳矽鍺錫鉛" },
+            { title: "VA族 (氮族)", elements: "N, P, As, Sb, Bi", text: "蛋林生弟畢", sub: "氮磷砷銻鉍" },
+            { title: "VIA族 (氧族)", elements: "O, S, Se, Te, Po", text: "養牛洗屁股", sub: "氧硫硒碲釙" },
+            { title: "VIIA族 (鹵素)", elements: "F, Cl, Br, I, At", text: "父女繡點愛 (氟氯溴碘砈)", sub: "氟氯溴碘砈" },
+            { title: "VIIIA族 (惰性氣體)", elements: "He, Ne, Ar, Kr, Xe, Rn", text: "害乃亞克先冬", sub: "氦氖氬氪氙氡" },
+            { title: "過渡元素 (第四週期)", elements: "Cr, Mn, Fe, Co, Ni, Cu, Zn", text: "各猛鐵姑捏痛心", sub: "鉻錳鐵鈷鎳銅鋅" },
+        ];
+        
+        // --- 根價離子記憶法資料 ---
+        const VALENCE_MNEMONICS = [
+            { title: "+1 價陽離子", elements: "H, Li, Na, K, Ag", text: "請李娜嫁銀", sub: "氫鋰鈉鉀銀" },
+            { title: "+2 價陽離子", elements: "Mg, Ca, Ba, Zn, Pb, Cu, Fe(II)", text: "美蓋被，心痛欠壓貼", sub: "鎂鈣鋇，鋅銅鉛亞鐵" },
+            { title: "-1 價鹵素離子", elements: "F, Cl, Br, I", text: "父女繡點", sub: "氟氯溴碘" },
+            { title: "-1 價常見根", elements: "OH, NO3, CH3COO", text: "青笑吃醋", sub: "氫(氧) 硝(酸) 醋(酸)" },
+            { title: "-2 價家族", elements: "O, S, SO4, CO3", text: "楊柳 流汗 燙傷", sub: "氧 硫 硫酸 碳酸" },
+        ];
+
+        // --- 中英對照 (符號) 記憶法 ---
+        const SYMBOL_MNEMONICS = [
+            { symbol: "Ag", name: "銀", hint: "阿公(Ag) 有銀子", type: "metal" },
+            { symbol: "Au", name: "金", hint: "哎喲(Au)！金子耶！", type: "metal" },
+            { symbol: "Cu", name: "銅", hint: "See you (Cu) 銅學", type: "metal" },
+            { symbol: "Fe", name: "鐵", hint: "飛(Fe) 鐵俠 (鋼鐵人)", type: "metal" },
+            { symbol: "Pb", name: "鉛", hint: "跑步(Pb) 腿像灌鉛", type: "metal" },
+            { symbol: "Hg", name: "汞", hint: "很高(Hg) 的溫度計", type: "metal" },
+            { symbol: "Mn", name: "錳", hint: "猛(Mn) 男", type: "metal" },
+            { symbol: "Zn", name: "鋅", hint: "真(Zn) 辛(鋅)苦", type: "metal" },
+            { symbol: "Mg", name: "鎂", hint: "美極(Mg) 了", type: "metal" },
+            { symbol: "Ca", name: "鈣", hint: "卡(Ca) 住缺鈣", type: "metal" },
+            { symbol: "K", name: "鉀", hint: "K金 鎧(K)甲", type: "metal" },
+            { symbol: "Ba", name: "鋇", hint: "爸(Ba) 是寶貝(鋇)", type: "metal" },
+            { symbol: "Na", name: "鈉", hint: "吶(Na)喊", type: "metal" },
+            { symbol: "F", name: "氟", hint: "福(F) 氣(氟)", type: "nonmetal" },
+            { symbol: "Si", name: "矽", hint: "吸(Si) 管(矽)", type: "nonmetal" },
+            { symbol: "P", name: "磷", hint: "皮(P) 膚有鱗(磷)", type: "nonmetal" },
+            { symbol: "S", name: "硫", hint: "S 曲線流(硫)動", type: "nonmetal" },
         ];
 
         // --- 工具函數 ---
@@ -176,7 +237,7 @@
                         <h2 className="text-2xl font-bold text-teal-800">歡迎回來！</h2>
                         <p className="text-slate-500">請選擇今天的學習模式</p>
                     </div>
-                    <MenuButton icon={<Icons.BookOpen className="w-8 h-8 text-blue-500" />} title="原子式總表" desc="依根價或週期表瀏覽" onClick={() => setView('list_menu')} color="border-blue-200 hover:bg-blue-50" />
+                    <MenuButton icon={<Icons.BookOpen className="w-8 h-8 text-blue-500" />} title="化學式總表" desc="依根價或週期表瀏覽" onClick={() => setView('list_menu')} color="border-blue-200 hover:bg-blue-50" />
                     <MenuButton icon={<Icons.PenTool className="w-8 h-8 text-purple-500" />} title="測驗：中翻英" desc="看中文 -> 寫化學式/元素符號" onClick={() => setView('quiz1_menu')} color="border-purple-200 hover:bg-purple-50" />
                     <MenuButton icon={<Icons.RefreshCw className="w-8 h-8 text-orange-500" />} title="測驗：英翻中" desc="綜合混合題型" onClick={() => setView('quiz2')} color="border-orange-200 hover:bg-orange-50" />
                 </div>
@@ -223,8 +284,10 @@
             return (
                 <div className="space-y-6 animate-fade-in pb-10">
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
-                        <h2 className="font-bold text-lg text-slate-700">原子式總表 (依根價)</h2>
+                        <h2 className="font-bold text-lg text-slate-700">化學式總表</h2>
                     </div>
+                    
+                    {/* 化學式 Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {order.map(val => (
                             <div key={val} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
@@ -242,6 +305,50 @@
                             </div>
                         ))}
                     </div>
+                    
+                    {/* 中英對照 (符號) 記憶法 - 新增區塊 */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+                        <div className="bg-amber-50 p-4 border-b border-amber-100 flex items-center gap-2">
+                            <Icons.Sparkles className="w-6 h-6 text-amber-500" />
+                            <h2 className="font-bold text-lg text-amber-800">中英對照超強聯想 (諧音/趣味)</h2>
+                        </div>
+                        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {SYMBOL_MNEMONICS.map((m, idx) => (
+                                <div key={idx} className={`p-3 rounded-lg border flex flex-col items-center text-center ${
+                                    m.type === 'metal' ? 'bg-slate-50 border-slate-200' : 'bg-green-50 border-green-200'
+                                }`}>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-xl font-black text-slate-800">{m.symbol}</span>
+                                        <span className="text-sm font-bold text-slate-500">{m.name}</span>
+                                    </div>
+                                    <div className="text-sm font-bold text-amber-700">{m.hint}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="p-2 bg-amber-50/50 text-center text-xs text-amber-600">
+                           ★ 透過諧音或故事，把英文符號和中文名稱串起來！
+                        </div>
+                    </div>
+
+                    {/* 超強記憶法 (離子) */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+                        <div className="bg-pink-50 p-4 border-b border-pink-100 flex items-center gap-2">
+                            <Icons.Bulb className="w-6 h-6 text-pink-500" />
+                            <h2 className="font-bold text-lg text-pink-800">離子超強記憶法</h2>
+                        </div>
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {VALENCE_MNEMONICS.map((m, idx) => (
+                                <div key={idx} className="bg-slate-50 rounded-lg p-4 border border-slate-100 hover:bg-white hover:shadow-md transition-all">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-slate-700 text-sm">{m.title}</h3>
+                                        <span className="text-[10px] text-slate-400 bg-white px-1 border rounded">{m.elements}</span>
+                                    </div>
+                                    <div className="text-lg font-bold text-pink-600 mb-1">{m.text}</div>
+                                    <div className="text-xs text-slate-500">{m.sub}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -249,7 +356,6 @@
         // --- 功能 1.2: 依週期表列表 ---
         function PeriodicTableView() {
             // 建立 18x10 的 grid (多預留給錒系)
-            // 將元素填入對應位置
             const gridCells = [];
             for(let r=1; r<=9; r++) {
                 for(let c=1; c<=18; c++) {
@@ -259,26 +365,72 @@
             }
 
             return (
-                <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 animate-fade-in overflow-x-auto">
-                    <div className="min-w-[600px]"> {/* 強制最小寬度以防手機版擠壓太嚴重 */}
-                        <h2 className="font-bold text-lg text-slate-700 mb-4 text-center">元素週期表</h2>
-                        <div className="periodic-grid mb-4">
-                            {gridCells.map((cell, idx) => {
-                                if (!cell.el) {
-                                    // 空白格
-                                    return <div key={idx} className="bg-slate-50"></div>;
-                                }
-                                return (
-                                    <div key={idx} className={`periodic-cell border ${cell.el ? 'bg-white border-slate-300 shadow-sm' : 'bg-slate-100 border-transparent'}`}>
-                                        <span className="font-bold text-teal-700 periodic-symbol text-base leading-none">{cell.el.s}</span>
-                                        <span className="text-[10px] text-slate-500 scale-75 whitespace-nowrap">{cell.el.n}</span>
-                                    </div>
-                                );
-                            })}
+                <div className="animate-fade-in space-y-8 pb-10">
+                    <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-2 border-b border-slate-100 mb-2 flex justify-between items-center">
+                            <h2 className="font-bold text-lg text-slate-700">元素週期表</h2>
+                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">可左右滑動</span>
                         </div>
-                        {/* 錒系/內過渡元素 標示 */}
-                        <div className="text-center text-xs text-slate-400 mt-2">
-                            (註：鈾 U 位於下方錒系元素區)
+                        <div className="overflow-x-auto pb-4">
+                            <div className="min-w-[900px] px-2"> {/* 加寬最小寬度，讓格子變大 */}
+                                <div className="periodic-grid mb-2">
+                                    {gridCells.map((cell, idx) => {
+                                        if (!cell.el) {
+                                            return <div key={idx} className="periodic-cell empty"></div>;
+                                        }
+                                        return (
+                                            <div key={idx} className={`periodic-cell border ${cell.el ? 'border-slate-300 shadow-sm hover:border-teal-500 hover:shadow-md cursor-default' : 'border-transparent'}`}>
+                                                <span className="text-teal-700 periodic-symbol symbol">{cell.el.s}</span>
+                                                <span className="text-slate-600 name">{cell.el.n}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="text-center text-sm text-slate-400 mt-2 font-medium">
+                                    (註：鈾 U 位於下方錒系元素區)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 超強記憶法區塊 (週期表 - 族群) */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="bg-indigo-50 p-4 border-b border-indigo-100 flex items-center gap-2">
+                            <Icons.Bulb className="w-6 h-6 text-indigo-500" />
+                            <h2 className="font-bold text-lg text-indigo-800">族群超強記憶法</h2>
+                        </div>
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {MNEMONICS.map((m, idx) => (
+                                <div key={idx} className="bg-slate-50 rounded-lg p-4 border border-slate-100 hover:bg-white hover:shadow-md transition-all">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-slate-700 text-sm">{m.title}</h3>
+                                        <span className="text-[10px] text-slate-400 bg-white px-1 border rounded">{m.elements}</span>
+                                    </div>
+                                    <div className="text-lg font-bold text-indigo-600 mb-1">{m.text}</div>
+                                    <div className="text-xs text-slate-500">{m.sub}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 超強記憶法區塊 (中英對照 - 符號) */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="bg-amber-50 p-4 border-b border-amber-100 flex items-center gap-2">
+                            <Icons.Sparkles className="w-6 h-6 text-amber-500" />
+                            <h2 className="font-bold text-lg text-amber-800">元素符號超強聯想 (諧音/趣味)</h2>
+                        </div>
+                        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {SYMBOL_MNEMONICS.map((m, idx) => (
+                                <div key={idx} className={`p-3 rounded-lg border flex flex-col items-center text-center ${
+                                    m.type === 'metal' ? 'bg-slate-50 border-slate-200' : 'bg-green-50 border-green-200'
+                                }`}>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-xl font-black text-slate-800">{m.symbol}</span>
+                                        <span className="text-sm font-bold text-slate-500">{m.name}</span>
+                                    </div>
+                                    <div className="text-sm font-bold text-amber-700">{m.hint}</div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
