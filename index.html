@@ -19,6 +19,24 @@
         .animate-fade-in {
             animation: fadeIn 0.3s ease-out forwards;
         }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-5px); }
+            40% { transform: translateX(5px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.2s ease-out;
+        }
         body {
             font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
             background-color: #f8fafc;
@@ -26,9 +44,9 @@
         /* 週期表 Grid 設定 */
         .periodic-grid {
             display: grid;
-            grid-template-columns: repeat(18, minmax(42px, 1fr)); /* 稍微調整寬度 */
-            gap: 1px; /* 間距縮小，讓線條更緊密 */
-            background-color: #cbd5e1; /* 背景色作為格線顏色 (slate-300) */
+            grid-template-columns: repeat(18, minmax(42px, 1fr));
+            gap: 1px;
+            background-color: #cbd5e1;
             padding: 1px;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
@@ -39,10 +57,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background-color: white; /* 格子為白色 */
+            background-color: white;
             position: relative;
         }
-        /* 空格部分設定為透明背景，顯示出背景的灰色，或直接隱藏 */
         .periodic-cell.empty {
             background-color: transparent;
             box-shadow: none;
@@ -57,7 +74,6 @@
             font-weight: 500;
             margin-top: 2px;
         }
-        /* 手機版微調 */
         @media (max-width: 640px) {
             .symbol { font-size: 1rem; }
             .name { font-size: 0.75rem; }
@@ -69,7 +85,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
         // --- ICON 元件 ---
         const Icons = {
@@ -83,7 +99,8 @@
             Grid: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>,
             List: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
             Bulb: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.2 1.5-3.5 0-3.3-2.7-6-6-6S6 4.7 6 8c0 1.3.5 2.5 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>,
-            Sparkles: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5H5"/><path d="M19 19v2"/><path d="M21 21h-2"/></svg>
+            Sparkles: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5H5"/><path d="M19 19v2"/><path d="M21 21h-2"/></svg>,
+            Puzzle: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M10 22v-8a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h4"/><path d="M18 22v-8a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-4"/><path d="M10 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h4"/><path d="M18 2v8a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-4"/></svg>
         };
 
         // --- 資料 1: 根價與離子 ---
@@ -119,7 +136,7 @@
             { s: 'U', n: '鈾', r: 9, c: 6, isInner: true }
         ];
 
-        // --- 週期表族群記憶法資料 ---
+        // --- 記憶法資料 ---
         const MNEMONICS = [
             { title: "IA族 (鹼金族)", elements: "H, Li, Na, K, Rb, Cs, Fr", text: "請李娜加入色法", sub: "氫鋰鈉鉀銣銫砝" },
             { title: "IIA族 (鹼土族)", elements: "Be, Mg, Ca, Sr, Ba, Ra", text: "比美蓋斯貝雷", sub: "鈹鎂鈣鍶鋇鐳" },
@@ -131,8 +148,6 @@
             { title: "VIIIA族 (惰性氣體)", elements: "He, Ne, Ar, Kr, Xe, Rn", text: "害乃亞克先冬", sub: "氦氖氬氪氙氡" },
             { title: "過渡元素 (第四週期)", elements: "Cr, Mn, Fe, Co, Ni, Cu, Zn", text: "各猛鐵姑捏痛心", sub: "鉻錳鐵鈷鎳銅鋅" },
         ];
-        
-        // --- 根價離子記憶法資料 ---
         const VALENCE_MNEMONICS = [
             { title: "+1 價陽離子", elements: "H, Li, Na, K, Ag", text: "請李娜嫁銀", sub: "氫鋰鈉鉀銀" },
             { title: "+2 價陽離子", elements: "Mg, Ca, Ba, Zn, Pb, Cu, Fe(II)", text: "美蓋被，心痛欠壓貼", sub: "鎂鈣鋇，鋅銅鉛亞鐵" },
@@ -140,8 +155,6 @@
             { title: "-1 價常見根", elements: "OH, NO3, CH3COO", text: "青笑吃醋", sub: "氫(氧) 硝(酸) 醋(酸)" },
             { title: "-2 價家族", elements: "O, S, SO4, CO3", text: "楊柳 流汗 燙傷", sub: "氧 硫 硫酸 碳酸" },
         ];
-
-        // --- 中英對照 (符號) 記憶法 ---
         const SYMBOL_MNEMONICS = [
             { symbol: "Ag", name: "銀", hint: "阿公(Ag) 有銀子", type: "metal" },
             { symbol: "Au", name: "金", hint: "哎喲(Au)！金子耶！", type: "metal" },
@@ -163,6 +176,7 @@
         ];
 
         // --- 工具函數 ---
+        // 顯示基本下標 (例如 NO3 的 3)
         const formatFormula = (formula) => {
             return formula.split('').map((char, index) => {
                 if (/\d/.test(char)) {
@@ -170,6 +184,39 @@
                 }
                 return <span key={index}>{char}</span>;
             });
+        };
+
+        // 顯示帶有離子價數的上標 (例如 Ca2+)
+        const formatIon = (formula, valence) => {
+            // 1. 處理基本化學式的下標
+            const base = formula.split('').map((char, index) => {
+                if (/\d/.test(char)) {
+                    return <sub key={index} className="text-[0.6em] align-baseline relative top-1">{char}</sub>;
+                }
+                return <span key={index}>{char}</span>;
+            });
+
+            if (!valence) return base;
+
+            // 2. 處理價數格式
+            // 輸入: "+2", "-1", "+1", "-2"
+            // 目標: "2+", "-", "+", "2-" (數字在前，符號在後，省略1)
+            const sign = valence.includes('+') ? '+' : '⁻'; // 使用特殊字元或 CSS
+            const rawSign = valence.includes('+') ? '+' : '-';
+            
+            // 移除非數字部分，取得數字
+            const num = valence.replace(/\D/g, ''); 
+            const displayNum = num === '1' ? '' : num;
+            
+            // 組合：數字 + 符號 (例如 2+, 3-, 或 +)
+            return (
+                <span className="inline-flex items-baseline">
+                    {base}
+                    <sup className="text-[0.6em] align-super relative -top-1 font-bold ml-0.5">
+                        {displayNum}{rawSign}
+                    </sup>
+                </span>
+            );
         };
 
         const shuffleArray = (array) => {
@@ -183,7 +230,7 @@
 
         // --- 主程式 ---
         function App() {
-            const [view, setView] = useState('home'); // home, list_menu, list_valence, list_periodic, quiz1_menu, quiz1_valence, quiz1_element, quiz2
+            const [view, setView] = useState('home'); 
 
             // 導航處理
             const goHome = () => setView('home');
@@ -202,7 +249,7 @@
                                 化學學習小幫手
                             </h1>
                             {view !== 'home' && (
-                                <button onClick={view === 'list_menu' || view === 'quiz1_menu' || view === 'quiz2' ? goHome : goBack} className="bg-teal-700 hover:bg-teal-800 p-2 rounded-full transition-colors">
+                                <button onClick={view === 'list_menu' || view === 'quiz1_menu' || view === 'quiz2' || view === 'quiz3' ? goHome : goBack} className="bg-teal-700 hover:bg-teal-800 p-2 rounded-full transition-colors">
                                     <Icons.ArrowLeft />
                                 </button>
                             )}
@@ -224,6 +271,9 @@
 
                         {/* 測驗二視圖 */}
                         {view === 'quiz2' && <QuizMode2_Mixed />}
+                        
+                        {/* 測驗三視圖 (對對碰) */}
+                        {view === 'quiz3' && <QuizMode3_Match />}
                     </main>
                 </div>
             );
@@ -240,7 +290,20 @@
                     <MenuButton icon={<Icons.BookOpen className="w-8 h-8 text-blue-500" />} title="化學式總表" desc="依根價或週期表瀏覽" onClick={() => setView('list_menu')} color="border-blue-200 hover:bg-blue-50" />
                     <MenuButton icon={<Icons.PenTool className="w-8 h-8 text-purple-500" />} title="測驗：中翻英" desc="看中文 -> 寫化學式/元素符號" onClick={() => setView('quiz1_menu')} color="border-purple-200 hover:bg-purple-50" />
                     <MenuButton icon={<Icons.RefreshCw className="w-8 h-8 text-orange-500" />} title="測驗：英翻中" desc="綜合混合題型" onClick={() => setView('quiz2')} color="border-orange-200 hover:bg-orange-50" />
+                    <MenuButton icon={<Icons.Puzzle className="w-8 h-8 text-rose-500" />} title="元素對對碰" desc="左右配對消除遊戲 (16組)" onClick={() => setView('quiz3')} color="border-rose-200 hover:bg-rose-50" />
                 </div>
+            );
+        }
+
+        function MenuButton({ icon, title, desc, onClick, color }) {
+            return (
+                <button onClick={onClick} className={`flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border-2 ${color} transition-all active:scale-95 text-left w-full`}>
+                    <div className="p-3 bg-slate-50 rounded-xl">{icon}</div>
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+                        <p className="text-sm text-slate-500">{desc}</p>
+                    </div>
+                </button>
             );
         }
 
@@ -264,36 +327,17 @@
             );
         }
 
-        function MenuButton({ icon, title, desc, onClick, color }) {
-            return (
-                <button onClick={onClick} className={`flex items-center gap-4 p-6 bg-white rounded-2xl shadow-sm border-2 ${color} transition-all active:scale-95 text-left w-full`}>
-                    <div className="p-3 bg-slate-50 rounded-xl">{icon}</div>
-                    <div>
-                        <h3 className="text-lg font-bold text-slate-800">{title}</h3>
-                        <p className="text-sm text-slate-500">{desc}</p>
-                    </div>
-                </button>
-            );
-        }
-
-        // --- 功能 1.1: 依根價列表 ---
         function ValenceListView() {
-            // 定義顯示順序
             const order = ["+1", "+2", "+4", "-1", "-2"];
-            
             return (
                 <div className="space-y-6 animate-fade-in pb-10">
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 text-center">
                         <h2 className="font-bold text-lg text-slate-700">化學式總表</h2>
                     </div>
-                    
-                    {/* 化學式 Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {order.map(val => (
                             <div key={val} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                                <div className={`p-3 font-bold text-center text-white ${val.startsWith('+') ? 'bg-blue-500' : 'bg-red-500'}`}>
-                                    根價 {val}
-                                </div>
+                                <div className={`p-3 font-bold text-center text-white ${val.startsWith('+') ? 'bg-blue-500' : 'bg-red-500'}`}>根價 {val}</div>
                                 <div className="divide-y divide-slate-100">
                                     {VALENCE_DATA.filter(item => item.valence === val).map((item, idx) => (
                                         <div key={idx} className="p-3 flex justify-between items-center hover:bg-slate-50">
@@ -305,8 +349,6 @@
                             </div>
                         ))}
                     </div>
-                    
-                    {/* 中英對照 (符號) 記憶法 - 新增區塊 */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
                         <div className="bg-amber-50 p-4 border-b border-amber-100 flex items-center gap-2">
                             <Icons.Sparkles className="w-6 h-6 text-amber-500" />
@@ -314,9 +356,7 @@
                         </div>
                         <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             {SYMBOL_MNEMONICS.map((m, idx) => (
-                                <div key={idx} className={`p-3 rounded-lg border flex flex-col items-center text-center ${
-                                    m.type === 'metal' ? 'bg-slate-50 border-slate-200' : 'bg-green-50 border-green-200'
-                                }`}>
+                                <div key={idx} className={`p-3 rounded-lg border flex flex-col items-center text-center ${m.type === 'metal' ? 'bg-slate-50 border-slate-200' : 'bg-green-50 border-green-200'}`}>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-xl font-black text-slate-800">{m.symbol}</span>
                                         <span className="text-sm font-bold text-slate-500">{m.name}</span>
@@ -325,12 +365,8 @@
                                 </div>
                             ))}
                         </div>
-                        <div className="p-2 bg-amber-50/50 text-center text-xs text-amber-600">
-                           ★ 透過諧音或故事，把英文符號和中文名稱串起來！
-                        </div>
+                        <div className="p-2 bg-amber-50/50 text-center text-xs text-amber-600">★ 透過諧音或故事，把英文符號和中文名稱串起來！</div>
                     </div>
-
-                    {/* 超強記憶法 (離子) */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
                         <div className="bg-pink-50 p-4 border-b border-pink-100 flex items-center gap-2">
                             <Icons.Bulb className="w-6 h-6 text-pink-500" />
@@ -353,9 +389,7 @@
             );
         }
 
-        // --- 功能 1.2: 依週期表列表 ---
         function PeriodicTableView() {
-            // 建立 18x10 的 grid (多預留給錒系)
             const gridCells = [];
             for(let r=1; r<=9; r++) {
                 for(let c=1; c<=18; c++) {
@@ -363,7 +397,6 @@
                     gridCells.push({ r, c, el });
                 }
             }
-
             return (
                 <div className="animate-fade-in space-y-8 pb-10">
                     <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -372,12 +405,10 @@
                             <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">可左右滑動</span>
                         </div>
                         <div className="overflow-x-auto pb-4">
-                            <div className="min-w-[900px] px-2"> {/* 加寬最小寬度，讓格子變大 */}
+                            <div className="min-w-[900px] px-2">
                                 <div className="periodic-grid mb-2">
                                     {gridCells.map((cell, idx) => {
-                                        if (!cell.el) {
-                                            return <div key={idx} className="periodic-cell empty"></div>;
-                                        }
+                                        if (!cell.el) return <div key={idx} className="periodic-cell empty"></div>;
                                         return (
                                             <div key={idx} className={`periodic-cell border ${cell.el ? 'border-slate-300 shadow-sm hover:border-teal-500 hover:shadow-md cursor-default' : 'border-transparent'}`}>
                                                 <span className="text-teal-700 periodic-symbol symbol">{cell.el.s}</span>
@@ -386,14 +417,10 @@
                                         );
                                     })}
                                 </div>
-                                <div className="text-center text-sm text-slate-400 mt-2 font-medium">
-                                    (註：鈾 U 位於下方錒系元素區)
-                                </div>
+                                <div className="text-center text-sm text-slate-400 mt-2 font-medium">(註：鈾 U 位於下方錒系元素區)</div>
                             </div>
                         </div>
                     </div>
-
-                    {/* 超強記憶法區塊 (週期表 - 族群) */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className="bg-indigo-50 p-4 border-b border-indigo-100 flex items-center gap-2">
                             <Icons.Bulb className="w-6 h-6 text-indigo-500" />
@@ -412,8 +439,6 @@
                             ))}
                         </div>
                     </div>
-
-                    {/* 超強記憶法區塊 (中英對照 - 符號) */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div className="bg-amber-50 p-4 border-b border-amber-100 flex items-center gap-2">
                             <Icons.Sparkles className="w-6 h-6 text-amber-500" />
@@ -421,9 +446,7 @@
                         </div>
                         <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             {SYMBOL_MNEMONICS.map((m, idx) => (
-                                <div key={idx} className={`p-3 rounded-lg border flex flex-col items-center text-center ${
-                                    m.type === 'metal' ? 'bg-slate-50 border-slate-200' : 'bg-green-50 border-green-200'
-                                }`}>
+                                <div key={idx} className={`p-3 rounded-lg border flex flex-col items-center text-center ${m.type === 'metal' ? 'bg-slate-50 border-slate-200' : 'bg-green-50 border-green-200'}`}>
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="text-xl font-black text-slate-800">{m.symbol}</span>
                                         <span className="text-sm font-bold text-slate-500">{m.name}</span>
@@ -437,89 +460,69 @@
             );
         }
 
-        // --- 測驗共用邏輯 ---
+        // --- 測驗共用邏輯 (保持不變) ---
         function QuizRunner({ pool, type, onFinish }) { 
-            // type: 'valence' (需填化學式+根價), 'element' (需填符號), 'mixed' (混合)
             const [questions, setQuestions] = useState([]);
             const [currentIndex, setCurrentIndex] = useState(0);
             const [score, setScore] = useState(0);
             const [isFinished, setIsFinished] = useState(false);
-            
-            // Input states
-            const [input1, setInput1] = useState(""); // Formula or Name
-            const [input2, setInput2] = useState("+1"); // Valence (if needed)
-            
+            const [input1, setInput1] = useState("");
+            const [input2, setInput2] = useState("+1");
             const [feedback, setFeedback] = useState(null);
 
-            // 初始化：隨機取 20 題
             useEffect(() => {
                 const shuffled = shuffleArray(pool);
                 setQuestions(shuffled.slice(0, 20));
             }, [pool]);
 
             if (questions.length === 0) return null;
-
             const currentQ = questions[currentIndex];
             const isLast = currentIndex === 19;
 
-            // 處理回答
             const handleSubmit = () => {
                 let isCorrect = false;
                 let correctAnsText = "";
-
-                if (type === 'valence') { // Q: 中文, A: 化學式 + 根價
+                if (type === 'valence') {
                     const cleanInput = input1.trim().toLowerCase().replace(/\s+/g, '');
                     const cleanTarget = currentQ.formula.toLowerCase();
                     const isValCorrect = input2 === currentQ.valence;
                     isCorrect = (cleanInput === cleanTarget) && isValCorrect;
                     correctAnsText = `${currentQ.formula} ${currentQ.valence}`;
                 } 
-                else if (type === 'element') { // Q: 中文, A: 符號
+                else if (type === 'element') {
                     const cleanInput = input1.trim().toLowerCase().replace(/\s+/g, '');
-                    const cleanTarget = currentQ.s.toLowerCase(); // s for symbol
+                    const cleanTarget = currentQ.s.toLowerCase();
                     isCorrect = cleanInput === cleanTarget;
                     correctAnsText = currentQ.s;
                 }
-                else if (type === 'mixed') { // Q: 化學式/符號, A: 中文
+                else if (type === 'mixed') {
                     const userVal = input1.trim();
-                    // 判斷是離子題目還是元素題目
-                    if (currentQ.valence) { // 離子
-                        // 移除 "離子" 或 "根" 來比對核心字
+                    if (currentQ.valence) {
                         const core = currentQ.name.replace("離子", "").replace("根", "");
                         isCorrect = (userVal === currentQ.name || userVal === core);
                         correctAnsText = currentQ.name;
-                    } else { // 元素
+                    } else {
                         isCorrect = (userVal === currentQ.n);
                         correctAnsText = currentQ.n;
                     }
                 }
-
                 if (isCorrect) setScore(s => s + 5);
-
-                setFeedback({
-                    isCorrect,
-                    correctAnsText
-                });
+                setFeedback({ isCorrect, correctAnsText });
             };
 
             const handleNext = () => {
                 setFeedback(null);
                 setInput1("");
                 setInput2("+1");
-                if (isLast) {
-                    setIsFinished(true);
-                } else {
-                    setCurrentIndex(c => c + 1);
-                }
+                if (isLast) setIsFinished(true);
+                else setCurrentIndex(c => c + 1);
             };
 
             const handleKeyDown = (e) => {
-                // 防止輸入法 (IME) 選字時觸發提交
                 if (e.nativeEvent.isComposing) return;
-                
                 if (e.key === 'Enter') {
-                    if (feedback) handleNext(); // 如果已顯示結果，Enter 下一題
-                    else if (input1) handleSubmit(); // 如果作答中，Enter 送出
+                    if (feedback) handleNext();
+                    else if (input1) handleSubmit();
                 }
             };
 
@@ -546,7 +549,6 @@
 
             return (
                 <div className="flex flex-col gap-4 animate-fade-in max-w-md mx-auto">
-                    {/* 進度條 */}
                     <div className="flex justify-between items-center text-sm font-medium text-slate-500 px-2">
                         <span>Q {currentIndex + 1} / 20</span>
                         <span>分數: {score}</span>
@@ -554,11 +556,7 @@
                     <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
                         <div className="h-full bg-teal-500 transition-all duration-300" style={{ width: `${((currentIndex) / 20) * 100}%` }} />
                     </div>
-
-                    {/* 題目卡 */}
                     <div className="bg-white rounded-xl shadow-lg border-b-4 border-teal-600 p-8 flex flex-col items-center">
-                        
-                        {/* 題目顯示區 */}
                         <div className="mb-6 text-center">
                             <h3 className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">
                                 {type === 'mixed' ? "請填寫中文名稱" : "請填寫對應內容"}
@@ -572,96 +570,49 @@
                                             {formatFormula(currentQ.formula)}
                                             <span className="text-xl text-slate-400 mt-[-5px]">{currentQ.valence}</span>
                                         </div>
-                                    ) : (
-                                        <span className="font-mono text-teal-600">{currentQ.s}</span>
-                                    )
+                                    ) : <span className="font-mono text-teal-600">{currentQ.s}</span>
                                 )}
                             </div>
                         </div>
-
-                        {/* 作答區 */}
                         <div className="w-full space-y-4">
                             {type === 'valence' && (
                                 <div className="flex gap-2">
-                                    <input 
-                                        type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown}
-                                        placeholder="化學式 (如: H)"
-                                        className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-mono text-center focus:border-teal-500 outline-none"
-                                    />
-                                    <select 
-                                        value={input2} onChange={e => setInput2(e.target.value)}
-                                        className="w-1/3 bg-slate-50 border-2 border-slate-200 rounded-xl px-2 py-3 text-lg font-bold text-center focus:border-teal-500 outline-none"
-                                    >
+                                    <input type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown} placeholder="化學式 (如: H)" className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-mono text-center focus:border-teal-500 outline-none" />
+                                    <select value={input2} onChange={e => setInput2(e.target.value)} className="w-1/3 bg-slate-50 border-2 border-slate-200 rounded-xl px-2 py-3 text-lg font-bold text-center focus:border-teal-500 outline-none">
                                         {["+1", "+2", "+4", "-1", "-2"].map(v => <option key={v} value={v}>{v}</option>)}
                                     </select>
                                 </div>
                             )}
-
                             {type === 'element' && (
-                                <input 
-                                    type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown}
-                                    placeholder="元素符號 (如: He)"
-                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-mono text-center focus:border-teal-500 outline-none"
-                                />
+                                <input type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown} placeholder="元素符號 (如: He)" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-mono text-center focus:border-teal-500 outline-none" />
                             )}
-
                             {type === 'mixed' && (
                                 <div className="flex items-center justify-center gap-2 text-xl">
                                     {currentQ.valence ? (
                                         <>
                                             <span className="text-slate-400">(</span>
-                                            <input 
-                                                type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown}
-                                                className="w-32 border-b-2 border-slate-300 bg-transparent text-center font-bold focus:border-teal-500 outline-none"
-                                            />
+                                            <input type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown} className="w-32 border-b-2 border-slate-300 bg-transparent text-center font-bold focus:border-teal-500 outline-none" />
                                             <span className="text-slate-400">)</span>
-                                            <span className="font-bold text-slate-700 text-base">
-                                                {currentQ.name.includes("離子") ? "離子" : "根"}
-                                            </span>
+                                            <span className="font-bold text-slate-700 text-base">{currentQ.name.includes("離子") ? "離子" : "根"}</span>
                                         </>
-                                    ) : (
-                                        <input 
-                                            type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown}
-                                            placeholder="輸入中文"
-                                            className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-center font-bold focus:border-teal-500 outline-none"
-                                        />
-                                    )}
+                                    ) : <input type="text" value={input1} onChange={e => setInput1(e.target.value)} onKeyDown={handleKeyDown} placeholder="輸入中文" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-center font-bold focus:border-teal-500 outline-none" />}
                                 </div>
                             )}
-
-                            <button 
-                                onClick={handleSubmit}
-                                disabled={!input1}
-                                className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow active:scale-95 transition-all"
-                            >
-                                回答 (Enter)
-                            </button>
+                            <button onClick={handleSubmit} disabled={!input1} className="w-full bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow active:scale-95 transition-all">回答 (Enter)</button>
                         </div>
                     </div>
-
-                    {/* 回饋視窗 */}
                     {feedback && (
                         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
                             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center">
-                                {feedback.isCorrect ? (
-                                    <Icons.CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                                ) : (
-                                    <Icons.XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                                )}
-                                <h3 className={`text-2xl font-bold mb-4 ${feedback.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                                    {feedback.isCorrect ? '回答正確！' : '回答錯誤'}
-                                </h3>
+                                {feedback.isCorrect ? <Icons.CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" /> : <Icons.XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />}
+                                <h3 className={`text-2xl font-bold mb-4 ${feedback.isCorrect ? 'text-green-700' : 'text-red-700'}`}>{feedback.isCorrect ? '回答正確！' : '回答錯誤'}</h3>
                                 {!feedback.isCorrect && (
                                     <div className="bg-slate-50 p-4 rounded-lg mb-4">
                                         <p className="text-xs text-slate-500 uppercase">正確答案</p>
-                                        <div className="text-xl font-bold text-slate-800 flex justify-center items-center gap-1">
-                                            {feedback.correctAnsText}
-                                        </div>
+                                        <div className="text-xl font-bold text-slate-800 flex justify-center items-center gap-1">{feedback.correctAnsText}</div>
                                     </div>
                                 )}
-                                <button onClick={handleNext} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900">
-                                    {isLast ? "查看成績" : "下一題 (Enter)"}
-                                </button>
+                                <button onClick={handleNext} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900">{isLast ? "查看成績" : "下一題 (Enter)"}</button>
                             </div>
                         </div>
                     )}
@@ -669,28 +620,218 @@
             );
         }
 
-        // --- 各種測驗模式配置 ---
-
-        function QuizMode1_Valence() {
-            return <QuizRunner pool={VALENCE_DATA} type="valence" />;
-        }
-
-        function QuizMode1_Element() {
-            return <QuizRunner pool={PERIODIC_ELEMENTS} type="element" />;
-        }
-
+        function QuizMode1_Valence() { return <QuizRunner pool={VALENCE_DATA} type="valence" />; }
+        function QuizMode1_Element() { return <QuizRunner pool={PERIODIC_ELEMENTS} type="element" />; }
         function QuizMode2_Mixed() {
-            // 混合題庫：合併兩者，但移除重複
-            // 邏輯：先放所有離子題，再放元素題。
-            // 為了避免重複 (例如 H 既在離子 H +1 又在元素 H)，我們簡單過濾一下
-            // 如果 PERIODIC_ELEMENTS 中的符號已經存在於 VALENCE_DATA 的 formula 中，則視為"相似"，但題目呈現方式不同 (一個有根價一個沒有)
-            // 題目要求：不要有重複的題目。
-            // 實作：將兩者合併。因為題型不同 (一個問 H+1, 一個問 H)，嚴格來說不算重複。
-            // 但如果覺得太像，可以過濾。這裡依照指示「混合後出題」。
-            // 為了體驗好，我們直接合併。使用者會看到 "H +1" (答:氫離子) 和 "H" (答:氫) 兩種不同題目，這符合化學學習邏輯。
-            
             const mixedPool = [...VALENCE_DATA, ...PERIODIC_ELEMENTS];
             return <QuizRunner pool={mixedPool} type="mixed" />;
+        }
+
+        // --- 元素對對碰 (QuizMode3_Match) ---
+        function QuizMode3_Match() {
+            const [items, setItems] = useState([]);
+            const [selectedId, setSelectedId] = useState(null);
+            const [isFinished, setIsFinished] = useState(false);
+            const [isProcessing, setIsProcessing] = useState(false);
+
+            useEffect(() => {
+                initGame();
+            }, []);
+
+            const initGame = () => {
+                const mixedPool = [...VALENCE_DATA, ...PERIODIC_ELEMENTS];
+                // 改為 16 組
+                const selectedPairs = shuffleArray(mixedPool).slice(0, 16);
+                
+                const leftItems = selectedPairs.map((item, idx) => ({
+                    id: `L-${idx}`,
+                    content: item.name || item.n,
+                    type: 'chinese',
+                    matchId: idx,
+                    state: 'idle',
+                    originalItem: item
+                }));
+
+                const rightItems = selectedPairs.map((item, idx) => ({
+                    id: `R-${idx}`,
+                    content: item.formula || item.s,
+                    type: 'english',
+                    matchId: idx,
+                    state: 'idle',
+                    originalItem: item
+                }));
+
+                const rightShuffled = shuffleArray(rightItems);
+
+                setItems([...leftItems, ...rightShuffled]);
+                setIsFinished(false);
+                setSelectedId(null);
+                setIsProcessing(false);
+            };
+
+            const handleCardClick = (clickedItem) => {
+                if (isProcessing || clickedItem.state === 'matched' || isFinished) return;
+
+                if (!selectedId) {
+                    setItems(prev => prev.map(item => 
+                        item.id === clickedItem.id ? { ...item, state: 'selected' } : item
+                    ));
+                    setSelectedId(clickedItem.id);
+                    return;
+                }
+
+                if (clickedItem.id === selectedId) {
+                    setItems(prev => prev.map(item => 
+                        item.id === clickedItem.id ? { ...item, state: 'idle' } : item
+                    ));
+                    setSelectedId(null);
+                    return;
+                }
+
+                const firstItem = items.find(i => i.id === selectedId);
+                
+                if (firstItem.type === clickedItem.type) {
+                    setItems(prev => prev.map(item => {
+                        if (item.id === firstItem.id) return { ...item, state: 'idle' };
+                        if (item.id === clickedItem.id) return { ...item, state: 'selected' };
+                        return item;
+                    }));
+                    setSelectedId(clickedItem.id);
+                    return;
+                }
+
+                setIsProcessing(true);
+
+                if (firstItem.matchId === clickedItem.matchId) {
+                    setItems(prev => prev.map(item => {
+                        if (item.id === firstItem.id || item.id === clickedItem.id) {
+                            return { ...item, state: 'matched' };
+                        }
+                        return item;
+                    }));
+                    
+                    setSelectedId(null);
+                    
+                    setTimeout(() => {
+                        setIsProcessing(false);
+                        setItems(currentItems => {
+                            const allMatched = currentItems.every(i => i.state === 'matched');
+                            if (allMatched) setIsFinished(true);
+                            return currentItems;
+                        });
+                    }, 300);
+
+                } else {
+                    setItems(prev => prev.map(item => {
+                        if (item.id === firstItem.id || item.id === clickedItem.id) {
+                            return { ...item, state: 'error' };
+                        }
+                        return item;
+                    }));
+
+                    setTimeout(() => {
+                        setItems(prev => prev.map(item => {
+                            if (item.id === firstItem.id || item.id === clickedItem.id) {
+                                return { ...item, state: 'idle' };
+                            }
+                            return item;
+                        }));
+                        setSelectedId(null);
+                        setIsProcessing(false);
+                    }, 500);
+                }
+            };
+
+            const leftColumn = items.filter(i => i.type === 'chinese').sort((a,b) => parseInt(a.id.split('-')[1]) - parseInt(b.id.split('-')[1])); 
+            const rightColumn = items.filter(i => i.type === 'english'); 
+
+            if (isFinished) {
+                return (
+                    <div className="bg-white rounded-xl shadow-lg p-8 text-center animate-fade-in flex flex-col gap-6 items-center">
+                        <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto animate-pop">
+                            <Icons.Puzzle className="w-10 h-10 text-rose-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2">恭喜完成！</h2>
+                            <p className="text-slate-500">所有的元素都配對成功了</p>
+                        </div>
+                        <button onClick={initGame} className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl shadow transition-transform active:scale-95">
+                            再來一局
+                        </button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="max-w-5xl mx-auto animate-fade-in">
+                    <div className="flex justify-between items-center mb-6 px-4">
+                        <h2 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+                            <Icons.Puzzle className="text-rose-500" /> 元素對對碰 (16組)
+                        </h2>
+                        <button onClick={initGame} className="text-sm bg-white border border-slate-300 px-3 py-1 rounded-full text-slate-600 hover:bg-slate-50">
+                            重新開始
+                        </button>
+                    </div>
+                    
+                    {/* 兩欄佈局，中間留大間隙 */}
+                    <div className="flex flex-row justify-between gap-12 sm:gap-24 px-4">
+                        {/* 左邊欄位 (中文) - 電腦版雙排，手機版單排 */}
+                        <div className="w-1/2 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            {leftColumn.map(item => (
+                                <Card key={item.id} item={item} onClick={() => handleCardClick(item)} />
+                            ))}
+                        </div>
+                        
+                        {/* 右邊欄位 (英文) - 電腦版雙排，手機版單排 */}
+                        <div className="w-1/2 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            {rightColumn.map(item => (
+                                <Card key={item.id} item={item} onClick={() => handleCardClick(item)} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 卡片元件
+        function Card({ item, onClick }) {
+            // 緊湊一點的高度設計，適應 16 題
+            let baseStyle = "w-full h-10 sm:h-12 flex items-center justify-center rounded-lg border-2 font-bold text-base sm:text-lg shadow-sm transition-all duration-200 cursor-pointer select-none";
+            let stateStyle = "";
+            let content = item.content;
+
+            // 判斷類型來決定基本顏色
+            const isChinese = item.type === 'chinese';
+
+            if (item.state === 'idle') {
+                stateStyle = isChinese 
+                    ? "bg-blue-50 border-blue-200 text-blue-800 hover:border-blue-300 hover:bg-blue-100 active:scale-95"
+                    : "bg-amber-50 border-amber-200 text-amber-800 hover:border-amber-300 hover:bg-amber-100 active:scale-95";
+            } else if (item.state === 'selected') {
+                stateStyle = isChinese
+                    ? "bg-blue-100 border-blue-500 text-blue-900 scale-105 shadow-md z-10 animate-pop"
+                    : "bg-amber-100 border-amber-500 text-amber-900 scale-105 shadow-md z-10 animate-pop";
+            } else if (item.state === 'matched') {
+                // 這裡關鍵：配對後直接變成透明並縮小
+                stateStyle = "bg-green-100 border-green-500 text-green-600 opacity-0 scale-0 pointer-events-none"; 
+            } else if (item.state === 'error') {
+                stateStyle = "bg-red-50 border-red-500 text-red-600 animate-shake";
+            }
+
+            // 英文部分特殊處理：如果有價數，使用 formatIon；如果沒有(元素)，使用 formatFormula
+            if (item.type === 'english') {
+                if (item.originalItem.valence) {
+                    content = formatIon(item.content, item.originalItem.valence);
+                } else {
+                    content = formatFormula(item.content);
+                }
+            }
+
+            return (
+                <div onClick={onClick} className={`${baseStyle} ${stateStyle}`}>
+                    {content}
+                </div>
+            );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
